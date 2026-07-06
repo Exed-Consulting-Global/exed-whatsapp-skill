@@ -1,0 +1,15 @@
+{
+  "name": "exed",
+  "description": "Plugins internos da Exed Consulting para o Claude Code.",
+  "owner": {
+    "name": "Exed Consulting Global",
+    "email": "bruno.moreira@exedconsulting.com"
+  },
+  "plugins": [
+    {
+      "name": "exed-whatsapp",
+      "source": "./",
+      "description": "Skill de WhatsApp pessoal: leitura, resumo, busca e resposta com confirmação obrigatória, via ponte local whatsapp-mcp."
+    }
+  ]
+}

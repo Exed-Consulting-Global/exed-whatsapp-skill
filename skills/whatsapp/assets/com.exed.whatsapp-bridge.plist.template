@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template — setup.sh --launchd substitui __MCP_DIR__ e __HOME__ pelos paths reais. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.exed.whatsapp-bridge</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__MCP_DIR__/whatsapp-bridge/whatsapp-bridge</string>
+	</array>
+	<!-- Obrigatório: a ponte resolve store/*.db relativo ao CWD; CWD errado cria um banco vazio paralelo. -->
+	<key>WorkingDirectory</key>
+	<string>__MCP_DIR__/whatsapp-bridge</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/whatsapp-bridge.log</string>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/whatsapp-bridge.log</string>
+</dict>
+</plist>

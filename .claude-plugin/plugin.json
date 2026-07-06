@@ -1,0 +1,10 @@
+{
+  "name": "exed-whatsapp",
+  "description": "Ler, resumir, buscar e responder mensagens do WhatsApp pessoal pelo Claude Code, via ponte local whatsapp-mcp. Todo envio exige confirmação explícita do usuário.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Exed Consulting",
+    "email": "bruno.moreira@exedconsulting.com"
+  },
+  "homepage": "https://github.com/Exed-Consulting-Global/exed-whatsapp-skill"
+}
