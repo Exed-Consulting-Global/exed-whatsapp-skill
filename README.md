@@ -21,9 +21,12 @@ claude plugin install exed-whatsapp@exed
 Ou, numa sessão interativa do `claude` no terminal: `/plugin marketplace add ...` + `/plugin install ...`
 (o comando `/plugin` não existe em todos os ambientes — no app desktop, use a CLI acima).
 
-O repo pode ficar **privado**: a URL SSH usa a sua chave do GitHub — basta ter acesso à org. Se o
-repo for público, o atalho `Exed-Consulting-Global/exed-whatsapp-skill` também funciona no lugar
-da URL.
+**Acesso restrito à organização.** Este repo é **privado**, dentro da org `Exed-Consulting-Global`.
+Só quem é membro da organização (ou colaborador do repo) consegue instalar: a URL SSH usa a chave
+do GitHub da própria pessoa e o download da ponte (`gh release download`) usa a autenticação dela —
+os dois exigem acesso ao repo. **Mantenha o repo privado**: torná-lo público liberaria o código e
+os binários da ponte para qualquer um. Para conceder ou revogar acesso, gerencie os membros da org
+(ou os colaboradores do repo) no GitHub — não há nada a mudar no plugin.
 
 **2. Instale a stack local** — abra uma sessão nova e peça: *"configura meu whatsapp"* — o Claude
 roda o instalador do plugin para você. Ou rode manualmente:
