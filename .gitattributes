@@ -1,0 +1,4 @@
+# O patch e os scripts shell PRECISAM ser LF, senão no checkout do Windows viram CRLF
+# e o `git apply` da CI falha por contexto não bater.
+*.patch text eol=lf
+*.sh    text eol=lf

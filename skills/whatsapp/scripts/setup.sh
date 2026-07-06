@@ -14,7 +14,7 @@ set -euo pipefail
 MCP_DIR="${WHATSAPP_MCP_DIR:-$HOME/whatsapp-mcp}"
 UPSTREAM="https://github.com/lharries/whatsapp-mcp.git"
 PLUGIN_REPO="Exed-Consulting-Global/exed-whatsapp-skill"
-BRIDGE_RELEASE="bridge-v0.1.0"   # tag do release que contém os binários da ponte
+BRIDGE_RELEASE="bridge-v0.1.1"   # tag do release que contém os binários da ponte
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLIST_TEMPLATE="$SCRIPT_DIR/../assets/com.exed.whatsapp-bridge.plist.template"
 

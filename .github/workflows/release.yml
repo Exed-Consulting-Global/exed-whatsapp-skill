@@ -42,22 +42,23 @@ jobs:
         with:
           go-version: '1.25'
 
-      - name: Setup MinGW (gcc para CGO no Windows)
+      - name: Setup MSYS2 (gcc para CGO no Windows)
         if: runner.os == 'Windows'
-        uses: egor-tensin/setup-mingw@v2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          path-type: inherit
+          install: mingw-w64-ucrt-x86_64-gcc
 
-      - name: Build da ponte corrigida
+      - name: Build da ponte (Unix)
+        if: runner.os != 'Windows'
         shell: bash
-        run: |
-          set -euo pipefail
-          git clone "$UPSTREAM_REPO" upstream
-          cd upstream
-          git checkout "$UPSTREAM_COMMIT"
-          git apply "$GITHUB_WORKSPACE/skills/whatsapp/assets/whatsmeow-context-fix.patch"
-          cd whatsapp-bridge
-          go get "go.mau.fi/whatsmeow@$WHATSMEOW_VERSION"
-          go mod tidy
-          CGO_ENABLED=1 go build -trimpath -o "$GITHUB_WORKSPACE/${{ matrix.asset }}" .
+        run: bash .github/build-bridge.sh "${{ matrix.asset }}"
+
+      - name: Build da ponte (Windows)
+        if: runner.os == 'Windows'
+        shell: 'msys2 {0}'
+        run: bash .github/build-bridge.sh "${{ matrix.asset }}"
 
       - name: Upload artifact (para runs de workflow_dispatch)
         uses: actions/upload-artifact@v4

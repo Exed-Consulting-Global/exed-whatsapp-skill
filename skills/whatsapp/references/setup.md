@@ -55,7 +55,7 @@ health check).
 git clone --depth 1 https://github.com/lharries/whatsapp-mcp.git ~/whatsapp-mcp
 # baixa a ponte pré-compilada do release (troque darwin-arm64 pela sua plataforma:
 # darwin-amd64 / linux-amd64 / windows-amd64.exe):
-gh release download bridge-v0.1.0 -R Exed-Consulting-Global/exed-whatsapp-skill \
+gh release download bridge-v0.1.1 -R Exed-Consulting-Global/exed-whatsapp-skill \
   --pattern whatsapp-bridge-darwin-arm64 --dir ~/whatsapp-mcp/whatsapp-bridge
 mv ~/whatsapp-mcp/whatsapp-bridge/whatsapp-bridge-darwin-arm64 ~/whatsapp-mcp/whatsapp-bridge/whatsapp-bridge
 chmod +x ~/whatsapp-mcp/whatsapp-bridge/whatsapp-bridge
