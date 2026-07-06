@@ -32,9 +32,10 @@ roda o instalador do plugin para você. Ou rode manualmente:
 - **Windows nativo**: `powershell -ExecutionPolicy Bypass -File <plugin>\skills\whatsapp\scripts\setup.ps1`
   (⚠️ beta — ainda não testado em Windows real; feedback bem-vindo)
 
-O instalador clona o whatsapp-mcp, atualiza o whatsmeow (upstream pina uma versão que o WhatsApp
-rejeita com `Client outdated 405` — aplicamos um patch já validado), compila a ponte e registra o
-servidor MCP no Claude Code.
+O instalador clona o servidor MCP (Python), **baixa a ponte já compilada** do release do GitHub
+(nada de Go/gcc) e registra o servidor MCP no Claude Code. Os binários da ponte são gerados por
+CI (GitHub Actions) para mac/Windows/Linux e anexados ao release `bridge-v*` — já com o patch do
+erro `Client outdated 405` aplicado.
 
 **3. Pareie com o celular** (uma vez a cada ~20 dias):
 
@@ -60,13 +61,16 @@ A ponte só sincroniza mensagens enquanto roda. Para subir sozinha no login:
 
 ## Pré-requisitos
 
-| SO | Necessário |
-|---|---|
-| macOS | `go`, `uv`, `git` (ex.: `brew install go uv`) |
-| Linux / WSL | `go`, `uv`, `git`, `curl` |
-| Windows nativo | `go`, `uv`, `git` **e um gcc** (go-sqlite3 exige CGO — ex.: `winget install MSYS2.MSYS2`) |
+A ponte vem **pré-compilada** — sem Go, sem gcc, sem MSYS2. Só ferramentas leves:
 
-`ffmpeg` é opcional (só para enviar áudios com conversão automática). `sqlite3` melhora o
+| SO | Necessário | Instalar |
+|---|---|---|
+| macOS | `git`, `gh`, `uv` | `brew install git gh uv` |
+| Linux / WSL | `git`, `gh`, `uv`, `curl` | gerenciador do sistema + [cli.github.com](https://cli.github.com) + [astral.sh/uv](https://astral.sh/uv) |
+| Windows nativo | `git`, `gh`, `uv` | `winget install Git.Git GitHub.cli astral-sh.uv` |
+
+O `gh` precisa estar autenticado (`gh auth login`) — é o que baixa a ponte do release, inclusive
+em repo privado. `ffmpeg` é opcional (áudios com conversão automática); `sqlite3` melhora o
 diagnóstico do health check.
 
 ## Avisos

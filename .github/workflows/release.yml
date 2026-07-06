@@ -1,0 +1,73 @@
+name: Build bridge binaries
+
+# Gera a ponte whatsapp-bridge já corrigida (patch do erro 405) para cada plataforma
+# e anexa os binários ao release da tag. Assim os instaladores só baixam — ninguém
+# precisa de Go/gcc/MSYS2. Cada job compila NATIVAMENTE no seu SO (CGO exige toolchain
+# C nativo por causa do go-sqlite3), evitando cross-compile frágil.
+
+on:
+  push:
+    tags: ['bridge-v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  UPSTREAM_REPO: https://github.com/lharries/whatsapp-mcp.git
+  UPSTREAM_COMMIT: 7d6a06dcdce1f01dfb24f60e1030d5efba9f3b88
+  WHATSMEOW_VERSION: v0.0.0-20260630180629-b572e5bcb92b
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            asset: whatsapp-bridge-darwin-arm64
+          - runner: macos-13
+            asset: whatsapp-bridge-darwin-amd64
+          - runner: ubuntu-latest
+            asset: whatsapp-bridge-linux-amd64
+          - runner: windows-latest
+            asset: whatsapp-bridge-windows-amd64.exe
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout plugin (para o patch)
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Setup MinGW (gcc para CGO no Windows)
+        if: runner.os == 'Windows'
+        uses: egor-tensin/setup-mingw@v2
+
+      - name: Build da ponte corrigida
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone "$UPSTREAM_REPO" upstream
+          cd upstream
+          git checkout "$UPSTREAM_COMMIT"
+          git apply "$GITHUB_WORKSPACE/skills/whatsapp/assets/whatsmeow-context-fix.patch"
+          cd whatsapp-bridge
+          go get "go.mau.fi/whatsmeow@$WHATSMEOW_VERSION"
+          go mod tidy
+          CGO_ENABLED=1 go build -trimpath -o "$GITHUB_WORKSPACE/${{ matrix.asset }}" .
+
+      - name: Upload artifact (para runs de workflow_dispatch)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+
+      - name: Anexar ao release (em push de tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.asset }}
+          fail_on_unmatched_files: true

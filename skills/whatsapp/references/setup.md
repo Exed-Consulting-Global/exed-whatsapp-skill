@@ -30,33 +30,52 @@ Consequências práticas:
 
 ## Instalação automatizada (recomendada)
 
-Os instaladores do plugin fazem: clone → atualização do whatsmeow + patch (ver "Erros comuns:
-405") → build → `uv sync` → registro do MCP em escopo user.
+Os instaladores do plugin fazem: clone do servidor MCP (Python) → **download da ponte
+pré-compilada** do release `bridge-v*` → `uv sync` → registro do MCP em escopo user. Não compilam
+nada — a ponte já vem pronta (com o patch do erro 405), gerada por CI para cada plataforma.
 
 - **macOS / Linux / WSL**: `bash scripts/setup.sh`
 - **Windows nativo** (beta): `powershell -ExecutionPolicy Bypass -File scripts/setup.ps1`
 
-Pré-requisitos por SO:
+Pré-requisitos por SO (nenhum compilador — a ponte é baixada pronta):
 
 | SO | Necessário |
 |---|---|
-| macOS | `go`, `uv`, `git` (`brew install go uv`) |
-| Linux / WSL | `go` ([go.dev/dl](https://go.dev/dl)), `uv`, `git`, `curl` |
-| Windows nativo | `go`, `uv`, `git` **e gcc** (go-sqlite3 exige CGO): `winget install MSYS2.MSYS2`, no shell MSYS2 `pacman -S mingw-w64-ucrt-x86_64-gcc`, adicionar `C:\msys64\ucrt64\bin` ao PATH |
+| macOS | `git`, `gh`, `uv` (`brew install git gh uv`) |
+| Linux / WSL | `git`, `gh`, `uv`, `curl` ([cli.github.com](https://cli.github.com), [astral.sh/uv](https://astral.sh/uv)) |
+| Windows nativo | `git`, `gh`, `uv` (`winget install Git.Git GitHub.cli astral-sh.uv`) |
 
-Opcionais: `ffmpeg` (conversão de áudio no envio), `sqlite3` (diagnóstico melhor no health check).
+O `gh` precisa estar autenticado (`gh auth login`) — ele baixa a ponte do release, inclusive em
+repo privado. Opcionais: `ffmpeg` (conversão de áudio no envio), `sqlite3` (diagnóstico melhor no
+health check).
 
 ## Instalação manual (se preferir)
 
 ```bash
-git clone https://github.com/lharries/whatsapp-mcp.git ~/whatsapp-mcp
-cd ~/whatsapp-mcp/whatsapp-bridge
-go get -u go.mau.fi/whatsmeow@latest && go mod tidy
-git -C .. apply <plugin>/skills/whatsapp/assets/whatsmeow-context-fix.patch
-go build -o whatsapp-bridge .          # Windows: -o whatsapp-bridge.exe (CGO_ENABLED=1)
-cd ../whatsapp-mcp-server && uv sync
+git clone --depth 1 https://github.com/lharries/whatsapp-mcp.git ~/whatsapp-mcp
+# baixa a ponte pré-compilada do release (troque darwin-arm64 pela sua plataforma:
+# darwin-amd64 / linux-amd64 / windows-amd64.exe):
+gh release download bridge-v0.1.0 -R Exed-Consulting-Global/exed-whatsapp-skill \
+  --pattern whatsapp-bridge-darwin-arm64 --dir ~/whatsapp-mcp/whatsapp-bridge
+mv ~/whatsapp-mcp/whatsapp-bridge/whatsapp-bridge-darwin-arm64 ~/whatsapp-mcp/whatsapp-bridge/whatsapp-bridge
+chmod +x ~/whatsapp-mcp/whatsapp-bridge/whatsapp-bridge
+cd ~/whatsapp-mcp/whatsapp-mcp-server && uv sync
 claude mcp add --scope user whatsapp -- "$(command -v uv)" --directory ~/whatsapp-mcp/whatsapp-mcp-server run main.py
 ```
+
+### Compilar do zero (avançado)
+
+Só se você não puder usar os binários do release (plataforma sem asset, ou auditoria). Exige
+`go` 1.25 e um compilador C (go-sqlite3 usa CGO; no Windows, MSYS2 + `mingw-w64-ucrt-x86_64-gcc`):
+
+```bash
+cd ~/whatsapp-mcp/whatsapp-bridge
+go get go.mau.fi/whatsmeow@v0.0.0-20260630180629-b572e5bcb92b && go mod tidy
+git -C .. apply <plugin>/skills/whatsapp/assets/whatsmeow-context-fix.patch
+CGO_ENABLED=1 go build -o whatsapp-bridge .      # Windows: -o whatsapp-bridge.exe
+```
+
+A CI do plugin (`.github/workflows/release.yml`) faz exatamente isso, em runner nativo de cada SO.
 
 ## Pareamento QR (primeira vez)
 
@@ -111,16 +130,17 @@ parcialmente; mensagens antigas podem se perder.
 
 | Sintoma | Causa provável | Correção |
 |---|---|---|
-| `Client outdated (405) connect failure` no log da ponte | whatsmeow pinado no go.mod do upstream ficou velho; WhatsApp rejeita | `go get -u go.mau.fi/whatsmeow@latest && go mod tidy`, aplicar `assets/whatsmeow-context-fix.patch` (a API nova exige `context.Background()` em `client.Download`, `sqlstore.New`, `GetFirstDevice`, `GetGroupInfo`, `GetContact`), rebuild — o setup.sh/ps1 já faz tudo isso |
+| `gh: not authenticated` / download da ponte falha no setup | `gh` sem login | `gh auth login` e rodar o instalador de novo |
+| `release not found` no download | tag `bridge-v*` ainda não publicada, ou repo/tag errados | conferir os releases em github.com/Exed-Consulting-Global/exed-whatsapp-skill; ajustar `BRIDGE_RELEASE` no script se necessário |
+| `cannot execute binary file` / arquitetura errada ao rodar a ponte | binário de plataforma errada | rodar de novo o instalador (ele detecta SO/arch); no macOS antigo Intel confirmar que baixou `darwin-amd64` |
 | Ferramentas `mcp__whatsapp__*` ausentes na sessão | MCP não registrado, ou sessão aberta antes do registro | `claude mcp list`; re-registrar; abrir sessão nova |
 | `whatsapp ✘ Failed to connect` no `claude mcp list` | `uv` fora do PATH do spawn, ou path do `--directory` errado | registrar com caminho absoluto do `uv`; conferir o path do clone |
 | Envio falha com `Request error` | Ponte parada | iniciar a ponte / keep-alive |
-| `BRIDGE: PORT_CONFLICT` no check | Outro processo na porta 8080 | liberar a porta; avançado: trocar a porta em `whatsapp-bridge/main.go` **e** `WHATSAPP_API_BASE_URL` em `whatsapp-mcp-server/whatsapp.py`, e exportar `WHATSAPP_BRIDGE_PORT` para o health check |
-| Build falha no Windows com erro de gcc/cgo | go-sqlite3 exige compilador C | instalar MSYS2 + mingw gcc e pôr no PATH (ver pré-requisitos) |
-| `git apply` do patch falha no Windows | checkout com CRLF | re-clonar com `git clone -c core.autocrlf=false ...` (o setup.ps1 já faz) |
+| `BRIDGE: PORT_CONFLICT` no check | Outro processo na porta 8080 | liberar a porta; avançado: trocar a porta exige recompilar do zero (ver "Compilar do zero") + `WHATSAPP_API_BASE_URL` em `whatsapp-mcp-server/whatsapp.py` + exportar `WHATSAPP_BRIDGE_PORT` para o health check |
 | QR não aparece | Glitch da ponte | Ctrl+C e rodar de novo |
 | Pareamento recusado | Limite de aparelhos vinculados atingido | remover um aparelho antigo no celular (Dispositivos conectados) |
 | Mensagens novas não chegam com ponte "up" | Sessão expirada (~20 dias) | re-parear (seção acima) |
+| `Client outdated (405)` (só ao **compilar do zero**) | whatsmeow pinado no upstream ficou velho | os binários do release já corrigem; se compilar, veja "Compilar do zero" (bump do whatsmeow + patch) |
 
 ## Avisos importantes
 
