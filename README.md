@@ -1,15 +1,20 @@
-# exed-whatsapp — WhatsApp pessoal no Claude Code
+# exed-whatsapp — WhatsApp pessoal no Claude
 
-Plugin do Claude Code que permite ao Claude **ler, resumir, buscar e responder** as mensagens do
-seu WhatsApp pessoal — com um guard-rail central: **nenhuma mensagem é enviada sem você aprovar o
-rascunho explicitamente**.
+Leia, resuma, busque e responda seu WhatsApp pessoal dentro do Claude — com um guard-rail central:
+**nenhuma mensagem é enviada sem você aprovar o rascunho**. Tudo roda 100% local (ponte em Go via
+[whatsmeow](https://github.com/tulir/whatsmeow), pareada como "aparelho vinculado"); suas mensagens
+ficam na sua máquina, nada vai para a nuvem.
 
-Cada usuário roda a própria stack, 100% local: uma ponte em Go
-([whatsapp-mcp](https://github.com/lharries/whatsapp-mcp), MIT) pareada como "aparelho vinculado"
-do seu WhatsApp + um servidor MCP em Python. Suas mensagens ficam na sua máquina; nada vai para a
-nuvem.
+## Duas formas de instalar
 
-## Instalação
+- **App desktop do Claude (Windows/Mac) — para todos, sem terminal.** Instale o bundle de um clique
+  `exed-whatsapp.mcpb`. Passo a passo em **[docs/instalar-windows.md](docs/instalar-windows.md)**.
+  É um binário único (ponte + servidor MCP em Go, pasta [`desktop/`](desktop/)), sem Python, sem
+  GitHub, sem compilar nada. O bundle é gerado pela CI (`desktop-v*`).
+- **Claude Code (CLI) — para uso técnico/desenvolvimento.** Plugin com skill + servidor MCP em
+  Python + ponte pré-compilada. Instruções abaixo.
+
+## Instalação no Claude Code
 
 **1. Instale o plugin** — pelo terminal (funciona em qualquer ambiente):
 

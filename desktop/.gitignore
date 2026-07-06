@@ -1,0 +1,7 @@
+# Binários compilados (vêm da CI / build local) e dados de runtime — nunca versionar.
+/whatsapp-exed
+/whatsapp-exed.exe
+whatsapp-exed-*
+store/
+*.mcpb
+bundle/

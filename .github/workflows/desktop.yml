@@ -1,0 +1,97 @@
+name: Build desktop .mcpb bundle
+
+# Compila o binário único (ponte + servidor MCP, módulo desktop/) para macOS (arm64+amd64)
+# e Windows (amd64), funde os dois do Mac num binário universal (lipo) e empacota tudo num
+# único exed-whatsapp.mcpb (instalação de 1 clique no app desktop). Sem Python, sem Node no
+# alvo. Dispara em tag desktop-v*.
+
+on:
+  push:
+    tags: ['desktop-v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            asset: whatsapp-exed-darwin-arm64
+          - runner: macos-13
+            asset: whatsapp-exed-darwin-amd64
+          - runner: windows-latest
+            asset: whatsapp-exed-windows-amd64.exe
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Setup MSYS2 (gcc para CGO no Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          path-type: inherit
+          install: mingw-w64-ucrt-x86_64-gcc
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd desktop
+          CGO_ENABLED=1 go build -trimpath -o "${{ matrix.asset }}" .
+          mv "${{ matrix.asset }}" "../${{ matrix.asset }}"
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: 'msys2 {0}'
+        run: |
+          set -euo pipefail
+          cd desktop
+          CGO_ENABLED=1 go build -trimpath -o "${{ matrix.asset }}" .
+          mv "${{ matrix.asset }}" "../${{ matrix.asset }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+
+  pack:
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Baixar binários
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Montar bundle (universal Mac via lipo + exe Windows)
+        run: |
+          set -euo pipefail
+          mkdir -p bundle/server
+          # Binário universal do macOS (arm64 + amd64) — um só arquivo para os dois Macs.
+          lipo -create \
+            artifacts/whatsapp-exed-darwin-arm64/whatsapp-exed-darwin-arm64 \
+            artifacts/whatsapp-exed-darwin-amd64/whatsapp-exed-darwin-amd64 \
+            -output bundle/server/whatsapp-exed
+          chmod +x bundle/server/whatsapp-exed
+          cp artifacts/whatsapp-exed-windows-amd64.exe/whatsapp-exed-windows-amd64.exe bundle/server/whatsapp-exed.exe
+          cp desktop/manifest.json bundle/manifest.json
+      - name: Empacotar .mcpb
+        run: npx -y @anthropic-ai/mcpb@latest pack bundle exed-whatsapp.mcpb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exed-whatsapp.mcpb
+          path: exed-whatsapp.mcpb
+      - name: Anexar ao release (em push de tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: exed-whatsapp.mcpb
+          fail_on_unmatched_files: true

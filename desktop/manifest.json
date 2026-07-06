@@ -1,0 +1,45 @@
+{
+  "manifest_version": "0.2",
+  "name": "exed-whatsapp",
+  "display_name": "WhatsApp (Exed)",
+  "version": "0.1.0",
+  "description": "Leia, resuma e responda seu WhatsApp pessoal pelo Claude. Todo envio exige sua confirmação.",
+  "long_description": "Conecta seu WhatsApp pessoal ao Claude via uma ponte local (whatsmeow), pareada como aparelho vinculado. Tudo roda na sua máquina — suas mensagens não vão para a nuvem. Peça 'conecte meu whatsapp' e escaneie o QR que aparecer no chat. Nenhuma mensagem é enviada sem você aprovar o rascunho.",
+  "author": {
+    "name": "Exed Consulting"
+  },
+  "server": {
+    "type": "binary",
+    "entry_point": "server/whatsapp-exed",
+    "mcp_config": {
+      "command": "${__dirname}/server/whatsapp-exed",
+      "args": [],
+      "env": {},
+      "platform_overrides": {
+        "win32": {
+          "command": "${__dirname}/server/whatsapp-exed.exe"
+        }
+      }
+    }
+  },
+  "tools": [
+    { "name": "conectar_whatsapp", "description": "Mostra o QR para vincular o WhatsApp (escaneie no celular)." },
+    { "name": "listar_conversas", "description": "Lista as conversas por atividade recente." },
+    { "name": "listar_mensagens", "description": "Lê mensagens de uma conversa, por período ou busca." },
+    { "name": "buscar_contatos", "description": "Encontra contatos por nome ou número." },
+    { "name": "obter_conversa", "description": "Metadados de uma conversa pelo JID." },
+    { "name": "conversa_por_contato", "description": "Encontra a conversa direta de um número." },
+    { "name": "conversas_do_contato", "description": "Conversas que envolvem um contato." },
+    { "name": "ultima_interacao", "description": "Última mensagem trocada com um contato." },
+    { "name": "contexto_da_mensagem", "description": "Mensagens ao redor de uma mensagem específica." },
+    { "name": "baixar_midia", "description": "Baixa um anexo (imagem/áudio/documento)." },
+    { "name": "preparar_envio", "description": "Prepara um rascunho de envio (texto e/ou arquivo) e devolve um token de confirmação." },
+    { "name": "preparar_envio_arquivo", "description": "Atalho: prepara o envio de um arquivo. Devolve preview + token." },
+    { "name": "preparar_envio_audio", "description": "Atalho: prepara o envio de um áudio como nota de voz. Devolve preview + token." },
+    { "name": "enviar", "description": "Envia o rascunho preparado (exige o token). Só após aprovação do usuário." }
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "win32"]
+  },
+  "license": "MIT"
+}
