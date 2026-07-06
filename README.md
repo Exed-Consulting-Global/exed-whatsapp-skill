@@ -11,12 +11,19 @@ nuvem.
 
 ## Instalação
 
-**1. Instale o plugin** (numa sessão do Claude Code):
+**1. Instale o plugin** — pelo terminal (funciona em qualquer ambiente):
 
+```bash
+claude plugin marketplace add git@github.com:Exed-Consulting-Global/exed-whatsapp-skill.git
+claude plugin install exed-whatsapp@exed
 ```
-/plugin marketplace add Exed-Consulting-Global/exed-whatsapp-skill
-/plugin install exed-whatsapp@exed
-```
+
+Ou, numa sessão interativa do `claude` no terminal: `/plugin marketplace add ...` + `/plugin install ...`
+(o comando `/plugin` não existe em todos os ambientes — no app desktop, use a CLI acima).
+
+O repo pode ficar **privado**: a URL SSH usa a sua chave do GitHub — basta ter acesso à org. Se o
+repo for público, o atalho `Exed-Consulting-Global/exed-whatsapp-skill` também funciona no lugar
+da URL.
 
 **2. Instale a stack local** — abra uma sessão nova e peça: *"configura meu whatsapp"* — o Claude
 roda o instalador do plugin para você. Ou rode manualmente:
